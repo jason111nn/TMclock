@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-family: 'Inter', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #2A2A2A;
+  color: #ffffff;
+  scroll-behavior: smooth;
+}
+
+body { min-height: 100vh; }
+#app { min-height: 100vh; display: flex; flex-direction: column; }
+
+/* ── Digit input ─────────────────────────────────────────────────── */
+.digit-input {
+  font-family: 'Inter', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700;
+  font-size: clamp(3rem, 10vw, 6.5rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+  background: transparent;
+  border: none;
+  outline: none;
+  text-align: center;
+  padding: 0;
+  width: 2.3ch;
+  caret-color: #FF6B00;
+  cursor: pointer;
+  -moz-appearance: textfield;
+}
+.digit-input::-webkit-inner-spin-button,
+.digit-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.digit-input:focus { cursor: text; }
+.digit-input:disabled { color: #888; cursor: not-allowed; }
+
+/* ── Unit label ───────────────────────────────────────────────────── */
+.unit-label {
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #dddddd;
+  user-select: none;
+}
+
+/* ── Colon ────────────────────────────────────────────────────────── */
+.colon {
+  font-weight: 300;
+  font-size: clamp(2.5rem, 8vw, 5.5rem);
+  line-height: 1;
+  color: #666666;
+  user-select: none;
+  padding-bottom: 1.6rem;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────── */
+.ctrl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.75rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.ctrl-btn--start {
+  background: #ffffff;
+  color: #2A2A2A;
+  border: 1px solid #ffffff;
+}
+.ctrl-btn--start:hover:not(:disabled) {
+  background: #e8e8e8;
+  border-color: #e8e8e8;
+}
+
+.ctrl-btn--pause {
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid #ffffff;
+}
+.ctrl-btn--pause:hover:not(:disabled) {
+  background: #ffffff;
+  color: #2A2A2A;
+}
+
+.ctrl-btn--reset {
+  background: transparent;
+  color: #dddddd;
+  border: 1px solid #555555;
+}
+.ctrl-btn--reset:hover:not(:disabled) {
+  border-color: #999;
+  color: #ffffff;
+}
+
+.ctrl-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ── Progress bar ─────────────────────────────────────────────────── */
+.prog-track {
+  width: 100%;
+  height: 2px;
+  background: #444444;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.prog-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #FF6B00;
+  transition: width 0.9s linear;
+}
