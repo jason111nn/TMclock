@@ -1,18 +1,150 @@
-@import "tailwindcss";
+/* Tailwind removed — all styles are hand-written. No preflight interference. */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ══════════════════════════════════════════════════════════════════════
+   THEME VARIABLES
+   Dark mode is the DEFAULT (:root). Light mode overrides via html.light-mode.
+   This prevents any white background from bleeding through during load.
+   ══════════════════════════════════════════════════════════════════════ */
+:root {
+  /* ── 深色模式 (Dark Mode) — DEFAULT ──────────────────────────────── */
+  --bg-color:        #2A2A2A;
+  --text-primary:    #ffffff;
+  --text-secondary:  #dddddd;
+  --text-muted:      #aaaaaa;
+
+  --accent-color:    #FF6B00;
+  --prog-fill:       #FF6B00;
+  --prog-track:      #444444;
+
+  --header-bg:       #252525;
+  --header-border:   #3a3a3a;
+
+  --btn-solid-bg:    #ffffff;
+  --btn-solid-text:  #2A2A2A;
+  --btn-solid-hover: #e8e8e8;
+
+  --btn-outline-text:    #dddddd;
+  --btn-outline-border:  #666666;
+  --btn-outline-hover:   #ffffff;
+
+  --btn-pause-text:     #ffffff;
+  --btn-pause-border:   #ffffff;
+  --btn-pause-hover-bg: rgba(255,255,255,0.1);
+
+  --btn-reset-text:   #dddddd;
+  --btn-reset-border: #555555;
+
+  --input-caret: #FF6B00;
+
+  --dot-r: 255;
+  --dot-g: 255;
+  --dot-b: 255;
+}
+
+/* ── 淺色模式 (Light Mode) — 全新配色 ────────────────────────────── */
+/*    設計方向：TM 工業藍調冷灰，絕非白色，飽和且有層次                      */
+html.light-mode {
+  /* 背景：飽和的石板藍灰，與深色模式完全對立 */
+  --bg-color:       #B8C4D8;
+
+  /* 文字：近黑到深藍灰，強對比 */
+  --text-primary:   #0A0E1A;
+  --text-secondary: #1E2B42;
+  --text-muted:     #4A5A78;
+
+  /* 強調：TM Blue 主色，TM Green 進度 */
+  --accent-color:   #1B75BC;
+  --prog-fill:      #5A9416;
+  --prog-track:     #8A9EBA;
+
+  /* Header / Footer：比主背景深一階，有層次感 */
+  --header-bg:      #A0B0C8;
+  --header-border:  #7A90AA;
+
+  /* 按鈕 — Solid（主要操作）：TM Blue 填充 */
+  --btn-solid-bg:    #1B75BC;
+  --btn-solid-text:  #ffffff;
+  --btn-solid-hover: #135A94;
+
+  /* 按鈕 — Outline（登入/外框）：TM Blue 框線 */
+  --btn-outline-text:    #1B75BC;
+  --btn-outline-border:  #1B75BC;
+  --btn-outline-hover:   #135A94;
+
+  /* 按鈕 — Pause：深色框線 */
+  --btn-pause-text:     #0A0E1A;
+  --btn-pause-border:   #0A0E1A;
+  --btn-pause-hover-bg: rgba(10,14,26,0.10);
+
+  /* 按鈕 — Reset：中調 */
+  --btn-reset-text:   #2A3A58;
+  --btn-reset-border: #6A7A96;
+
+  /* 輸入游標 */
+  --input-caret: #1B75BC;
+
+  /* Canvas 點陣：深藍色調，在藍灰底上清晰可見 */
+  --dot-r: 10;
+  --dot-g: 40;
+  --dot-b: 100;
+}
+
+html.light-mode *,
+html.light-mode *::before,
+html.light-mode *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: none !important;
+  transition-property: none !important;
+}
+
+html.light-mode .page-shell,
+html.light-mode .viewport-block,
+html.light-mode .main-area,
+html.light-mode .tm-header,
+html.light-mode .tm-footer {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-image: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   LOGO FILTERS
+   Header logo: originally coloured → invert to white for dark, keep for light.
+   Footer logo: originally white   → invert to black for light, keep for dark.
+   ══════════════════════════════════════════════════════════════════════ */
+.tm-logo-img {
+  filter: brightness(0) invert(1); /* default: dark mode → white */
+}
+html.light-mode .tm-logo-img {
+  filter: none; /* light mode → show original colours */
+}
+
+.tm-footer-logo-img {
+  filter: none; /* default: dark mode → keep white */
+}
+html.light-mode .tm-footer-logo-img {
+  filter: brightness(0); /* light mode → turn black */
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   BASE
+   ══════════════════════════════════════════════════════════════════════ */
 html {
   font-family: 'Inter', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #2A2A2A;
-  color: #ffffff;
+  background: var(--bg-color);
+  color: var(--text-primary);
   scroll-behavior: smooth;
 }
 
 body { min-height: 100vh; }
-#app { min-height: 100vh; display: flex; flex-direction: column; }
+#app  { min-height: 100vh; display: flex; flex-direction: column; }
 
 /* ── Digit input ─────────────────────────────────────────────────── */
 .digit-input {
@@ -22,21 +154,21 @@ body { min-height: 100vh; }
   line-height: 1;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
-  color: #ffffff;
+  color: var(--text-primary);
   background: transparent;
   border: none;
   outline: none;
   text-align: center;
   padding: 0;
   width: 2.3ch;
-  caret-color: #FF6B00;
+  caret-color: var(--input-caret);
   cursor: pointer;
   -moz-appearance: textfield;
 }
 .digit-input::-webkit-inner-spin-button,
 .digit-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .digit-input:focus { cursor: text; }
-.digit-input:disabled { color: #888; cursor: not-allowed; }
+.digit-input:disabled { color: var(--text-muted); cursor: not-allowed; }
 
 /* ── Unit label ───────────────────────────────────────────────────── */
 .unit-label {
@@ -44,7 +176,7 @@ body { min-height: 100vh; }
   font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #dddddd;
+  color: var(--text-secondary);
   user-select: none;
 }
 
@@ -53,7 +185,7 @@ body { min-height: 100vh; }
   font-weight: 300;
   font-size: clamp(2.5rem, 8vw, 5.5rem);
   line-height: 1;
-  color: #666666;
+  color: var(--text-muted);
   user-select: none;
   padding-bottom: 1.6rem;
 }
@@ -71,38 +203,36 @@ body { min-height: 100vh; }
   font-family: inherit;
   letter-spacing: 0.03em;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
   white-space: nowrap;
 }
 
 .ctrl-btn--start {
-  background: #ffffff;
-  color: #2A2A2A;
-  border: 1px solid #ffffff;
+  background: var(--btn-solid-bg);
+  color: var(--btn-solid-text);
+  border: 1px solid var(--btn-solid-bg);
 }
 .ctrl-btn--start:hover:not(:disabled) {
-  background: #e8e8e8;
-  border-color: #e8e8e8;
+  background: var(--btn-solid-hover);
+  border-color: var(--btn-solid-hover);
 }
 
 .ctrl-btn--pause {
   background: transparent;
-  color: #ffffff;
-  border: 1px solid #ffffff;
+  color: var(--btn-pause-text);
+  border: 1px solid var(--btn-pause-border);
 }
 .ctrl-btn--pause:hover:not(:disabled) {
-  background: #ffffff;
-  color: #2A2A2A;
+  background: var(--btn-pause-hover-bg);
 }
 
 .ctrl-btn--reset {
   background: transparent;
-  color: #dddddd;
-  border: 1px solid #555555;
+  color: var(--btn-reset-text);
+  border: 1px solid var(--btn-reset-border);
 }
 .ctrl-btn--reset:hover:not(:disabled) {
-  border-color: #999;
-  color: #ffffff;
+  border-color: var(--text-primary);
+  color: var(--text-primary);
 }
 
 .ctrl-btn:disabled {
@@ -114,13 +244,37 @@ body { min-height: 100vh; }
 .prog-track {
   width: 100%;
   height: 2px;
-  background: #444444;
+  background: var(--prog-track);
   border-radius: 999px;
   overflow: hidden;
 }
 .prog-fill {
   height: 100%;
   border-radius: 999px;
-  background: #FF6B00;
+  background: var(--prog-fill);
   transition: width 0.9s linear;
+}
+
+/* ── Theme Toggle Button ──────────────────────────────────────────── */
+.theme-toggle {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--header-bg);
+  border: 1px solid var(--header-border);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
 }

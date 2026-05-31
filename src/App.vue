@@ -9,9 +9,57 @@ const store = useCountdownStore()
 const { t } = useI18n()
 
 // ─────────────────────────────────────────────────────────────────────
-// 1. CANVAS — dense, very subtle animated dot-matrix background
-//    NOTE: internal animation counter renamed to `tick` to avoid
-//    conflict with the `t` translation computed ref from useI18n.
+// 0. STATIC THEME (Dark Only) & BROWSER NOTIFICATIONS
+// ─────────────────────────────────────────────────────────────────────
+const isDark = ref(true)
+
+function initTheme() {
+  document.documentElement.classList.remove('light-mode')
+}
+
+function requestNotificationPermission() {
+  if ('Notification' in window) {
+    if (Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+  }
+}
+
+function sendDoneNotification() {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(`${t.value.title || 'TM達明'} | ${t.value.done || '計時結束'}`, {
+      body: `${t.value.eyebrow || 'Techman Robot'} - ${t.value.subtitle || '能力檢定'}`,
+      icon: 'https://www.tm-robot.com/images/favicon.ico',
+      silent: false
+    })
+  }
+}
+
+watch(() => store.isDone, (done) => {
+  if (done) {
+    sendDoneNotification()
+  }
+})
+
+// ─────────────────────────────────────────────────────────────────────
+// 1. FULLSCREEN
+// ─────────────────────────────────────────────────────────────────────
+const isFullscreen = ref(false)
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {})
+  } else {
+    document.exitFullscreen().catch(() => {})
+  }
+}
+
+function onFullscreenChange() {
+  isFullscreen.value = !!document.fullscreenElement
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// 2. CANVAS — dense animated dot-matrix background
 // ─────────────────────────────────────────────────────────────────────
 const canvasRef = ref(null)
 let rafId = null
@@ -21,9 +69,9 @@ function initCanvas() {
   if (!canvas) return
   const ctx = canvas.getContext('2d')
 
-  const GAP    = 16   // dense grid (px between dot centers)
-  const SZ_MIN = 0.3  // very small min size
-  const SZ_MAX = 0.9  // small max size — subtle on #2A2A2A
+  const GAP    = 16
+  const SZ_MIN = 0.3
+  const SZ_MAX = 0.9
 
   let squares = []
 
@@ -49,15 +97,26 @@ function initCanvas() {
   window.addEventListener('resize', onResize)
   rebuild()
 
-  let tick = 0  // ← renamed from 't' to avoid scope conflict
+  let tick = 0
   function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
     tick += 0.005
+
+    const style   = getComputedStyle(document.documentElement)
+    const dotR    = style.getPropertyValue('--dot-r').trim()    || (isDark.value ? '255' : '27')
+    const dotG    = style.getPropertyValue('--dot-g').trim()    || (isDark.value ? '255' : '60')
+    const dotB    = style.getPropertyValue('--dot-b').trim()    || (isDark.value ? '255' : '120')
+
+    // html owns the background colour — canvas is transparent with dots only
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    const baseAlpha  = isDark.value ? 0.04 : 0.12
+    const alphaRange = isDark.value ? 0.05 : 0.10
+
     for (const sq of squares) {
       const wave  = 0.5 + 0.5 * Math.sin(tick * sq.freq + sq.phase)
-      const alpha = 0.04 + 0.05 * wave
+      const alpha = baseAlpha + alphaRange * wave
       const s     = SZ_MIN + (SZ_MAX - SZ_MIN) * wave
-      ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(3)})`
+      ctx.fillStyle = `rgba(${dotR}, ${dotG}, ${dotB}, ${alpha.toFixed(3)})`
       ctx.fillRect(sq.x - s, sq.y - s, s * 2, s * 2)
     }
     rafId = requestAnimationFrame(draw)
@@ -71,32 +130,38 @@ function initCanvas() {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// 2. EDITABLE TIMER FIELDS
+// 3. EDITABLE TIMER FIELDS
 // ─────────────────────────────────────────────────────────────────────
 const vHours   = ref(0)
 const vMinutes = ref(0)
 const vSeconds = ref(0)
 
-// Reactive fields array (labels update with locale)
+const displayTexts = ref({
+  hours: '00',
+  minutes: '00',
+  seconds: '00'
+})
+
 const fields = computed(() => [
   { key: 'hours',   label: t.value.hrs, vref: vHours,   min: 0, max: 99 },
   { key: 'minutes', label: t.value.min, vref: vMinutes, min: 0, max: 59 },
   { key: 'seconds', label: t.value.sec, vref: vSeconds, min: 0, max: 59 },
 ])
 
-// Input element refs by index
 const inputRefs = ref([null, null, null])
 const setRef = (el, idx) => { inputRefs.value[idx] = el || null }
 
-// Sync store → display fields
 watch(() => store.timeLeftMs, (ms) => {
   const total = Math.floor(Math.max(0, ms) / 1000)
   vHours.value   = Math.floor(total / 3600)
   vMinutes.value = Math.floor((total % 3600) / 60)
   vSeconds.value = total % 60
-  inputRefs.value.forEach((el, i) => {
-    if (el && el !== document.activeElement) {
-      el.value = pad(fields.value[i].vref.value)
+  
+  const keys = ['hours', 'minutes', 'seconds']
+  keys.forEach((key, i) => {
+    const el = inputRefs.value[i]
+    if (!el || el !== document.activeElement) {
+      displayTexts.value[key] = pad(fields.value[i].vref.value)
     }
   })
 }, { immediate: true })
@@ -107,7 +172,6 @@ function commitEdit() {
   store.setTime(vHours.value, vMinutes.value, vSeconds.value)
 }
 
-// ── Focus helpers ────────────────────────────────────────────────────
 function focusPrev(idx) {
   if (idx <= 0) return
   const el = inputRefs.value[idx - 1]
@@ -124,12 +188,13 @@ function focusNext(idx) {
   el.select()
 }
 
-// ── Event handlers ───────────────────────────────────────────────────
 function onFocus(e) { e.target.select() }
 
 function onInput(e, field, idx) {
   let val = e.target.value.replace(/\D/g, '').slice(0, 2)
   e.target.value = val
+  displayTexts.value[field.key] = val
+  
   field.vref.value = Math.min(field.max, parseInt(val) || 0)
   commitEdit()
   if (val.length === 2) focusNext(idx)
@@ -160,13 +225,13 @@ function onKeydown(e, field, idx) {
     case 'ArrowUp':
       e.preventDefault()
       field.vref.value = Math.min(field.max, (field.vref.value || 0) + 1)
-      el.value = pad(field.vref.value)
+      displayTexts.value[field.key] = pad(field.vref.value)
       commitEdit()
       break
     case 'ArrowDown':
       e.preventDefault()
       field.vref.value = Math.max(field.min, (field.vref.value || 0) - 1)
-      el.value = pad(field.vref.value)
+      displayTexts.value[field.key] = pad(field.vref.value)
       commitEdit()
       break
     case 'Enter':
@@ -180,13 +245,16 @@ function onKeydown(e, field, idx) {
 }
 
 function onBlur(e, field) {
-  field.vref.value = Math.min(field.max, Math.max(field.min, parseInt(e.target.value) || 0))
-  e.target.value   = pad(field.vref.value)
+  const val = Math.min(field.max, Math.max(field.min, parseInt(e.target.value) || 0))
+  field.vref.value = val
+  displayTexts.value[field.key] = pad(val)
   commitEdit()
 }
 
-// ── Timer controls ───────────────────────────────────────────────────
-function handleStart() { store.start() }
+function handleStart() {
+  requestNotificationPermission()
+  store.start()
+}
 function handlePause() { store.pause() }
 function handleReset() {
   store.reset()
@@ -194,21 +262,40 @@ function handleReset() {
   vHours.value   = Math.floor(total / 3600)
   vMinutes.value = Math.floor((total % 3600) / 60)
   vSeconds.value = total % 60
-  inputRefs.value.forEach((el, i) => {
-    if (el) el.value = pad(fields.value[i].vref.value)
+  fields.value.forEach((field) => {
+    displayTexts.value[field.key] = pad(field.vref.value)
   })
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// 4. GLOBAL KEY SHORTCUTS
+// ─────────────────────────────────────────────────────────────────────
+function onGlobalKey(e) {
+  // Only fire if not typing inside an input
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return
+  if (e.key === 'f' || e.key === 'F') toggleFullscreen()
 }
 
 // ── Lifecycle ─────────────────────────────────────────────────────────
 let canvasCleanup = null
-onMounted(() => { canvasCleanup = initCanvas() })
-onUnmounted(() => { if (canvasCleanup) canvasCleanup() })
+onMounted(() => {
+  initTheme()
+  requestNotificationPermission()
+  canvasCleanup = initCanvas()
+  document.addEventListener('fullscreenchange', onFullscreenChange)
+  window.addEventListener('keydown', onGlobalKey)
+})
+onUnmounted(() => {
+  if (canvasCleanup) canvasCleanup()
+  document.removeEventListener('fullscreenchange', onFullscreenChange)
+  window.removeEventListener('keydown', onGlobalKey)
+})
 </script>
 
 <template>
   <div class="page-shell">
 
-    <!-- Full-page canvas background -->
+    <!-- Full-page canvas background (owns background colour) -->
     <canvas ref="canvasRef" style="position:fixed; inset:0; z-index:0; pointer-events:none;" />
 
     <!-- ══ 100vh: header + main ══════════════════════════════════════ -->
@@ -216,13 +303,24 @@ onUnmounted(() => { if (canvasCleanup) canvasCleanup() })
 
       <TmHeader />
 
+      <!-- Background Watermark at main/footer boundary -->
+      <img
+        src="https://www.tm-robot.com/images/deco/green-shadow.png"
+        class="bg-watermark"
+        alt=""
+        aria-hidden="true"
+      />
+
       <main class="main-area">
 
         <!-- Title -->
         <div class="title-block">
           <p class="eyebrow">{{ t.eyebrow }}</p>
-          <h1 class="main-title">{{ t.title }}</h1>
+          <h1 class="main-title">
+            {{ t.title.split('-')[0] }}<span style="color:var(--accent-color);">{{ t.title.includes('-') ? '-' + t.title.split('-').slice(1).join('-') : '' }}</span>
+          </h1>
           <p class="main-subtitle">{{ t.subtitle }}</p>
+          <img src="https://www.tm-robot.com/images/deco/vector-row.png" alt="" aria-hidden="true" class="title-underline" />
         </div>
 
         <!-- Timer digits -->
@@ -235,7 +333,7 @@ onUnmounted(() => { if (canvasCleanup) canvasCleanup() })
                 inputmode="numeric"
                 maxlength="2"
                 class="digit-input"
-                :value="pad(field.vref.value)"
+                :value="displayTexts[field.key]"
                 :aria-label="field.label"
                 :disabled="store.isRunning"
                 @focus="onFocus"
@@ -312,6 +410,27 @@ onUnmounted(() => { if (canvasCleanup) canvasCleanup() })
 
     <TmFooter />
 
+    <!-- Fixed action buttons: Fullscreen -->
+    <div class="fab-group">
+      <!-- Fullscreen toggle -->
+      <button
+        id="btn-fullscreen"
+        class="theme-toggle"
+        @click="toggleFullscreen"
+        :aria-label="isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen (F)'"
+        :title="isFullscreen ? 'Exit Fullscreen (Esc)' : 'Fullscreen (F)'"
+      >
+        <!-- Enter fullscreen icon -->
+        <svg v-if="!isFullscreen" viewBox="0 0 24 24">
+          <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+        </svg>
+        <!-- Exit fullscreen icon -->
+        <svg v-else viewBox="0 0 24 24">
+          <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+        </svg>
+      </button>
+    </div>
+
   </div>
 </template>
 
@@ -322,7 +441,7 @@ onUnmounted(() => { if (canvasCleanup) canvasCleanup() })
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: #2A2A2A;
+  background: transparent; /* Canvas handles background — no bleed-through */
 }
 
 .viewport-block {
@@ -331,6 +450,7 @@ onUnmounted(() => { if (canvasCleanup) canvasCleanup() })
   height: 100vh;
   position: relative;
   z-index: 1;
+  overflow: hidden;
 }
 
 .main-area {
@@ -343,7 +463,30 @@ onUnmounted(() => { if (canvasCleanup) canvasCleanup() })
   padding: 2rem 1.5rem;
   position: relative;
   z-index: 1;
-  overflow: hidden;
+}
+
+/* ── Watermark ─────────────────────────────────────────────────────── */
+.bg-watermark {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.12;
+  width: 300px;
+  height: auto;
+}
+:global(html.light-mode) .bg-watermark {
+  opacity: 0.20;
+}
+
+/* ── Title underline ───────────────────────────────────────────────── */
+.title-underline {
+  display: block;
+  margin: 0.6rem auto 0;
+  width: 124px;
+  height: 4px;
+  pointer-events: none;
 }
 
 /* ── Title ─────────────────────────────────────────────────────────── */
@@ -352,7 +495,7 @@ onUnmounted(() => { if (canvasCleanup) canvasCleanup() })
 .eyebrow {
   font-size: 0.6rem;
   letter-spacing: 0.25em;
-  color: #aaaaaa;
+  color: var(--text-muted);
   text-transform: uppercase;
   margin-bottom: 0.6rem;
 }
@@ -360,7 +503,7 @@ onUnmounted(() => { if (canvasCleanup) canvasCleanup() })
 .main-title {
   font-size: clamp(1.75rem, 4.5vw, 3rem);
   font-weight: 800;
-  color: #ffffff;
+  color: var(--text-primary);
   line-height: 1.1;
   letter-spacing: -0.02em;
   margin-bottom: 0.25rem;
@@ -369,7 +512,7 @@ onUnmounted(() => { if (canvasCleanup) canvasCleanup() })
 .main-subtitle {
   font-size: clamp(0.875rem, 2vw, 1.25rem);
   font-weight: 300;
-  color: #dddddd;
+  color: var(--text-secondary);
   letter-spacing: 0.1em;
 }
 
@@ -404,7 +547,7 @@ onUnmounted(() => { if (canvasCleanup) canvasCleanup() })
   font-size: 0.6rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: #aaaaaa;
+  color: var(--text-muted);
 }
 
 /* ── Controls ──────────────────────────────────────────────────────── */
@@ -421,7 +564,18 @@ onUnmounted(() => { if (canvasCleanup) canvasCleanup() })
   font-size: 0.6rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #777777;
+  color: var(--text-muted);
   text-align: center;
+}
+
+/* ── FAB group (bottom-right fixed buttons) ────────────────────────── */
+.fab-group {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  z-index: 100;
 }
 </style>

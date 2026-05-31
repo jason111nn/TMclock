@@ -53,8 +53,7 @@ const socials = [
             src="https://www.tm-robot.com/images/footer/footer-logo.png"
             alt="Techman Robot"
             width="180"
-            class="tm-footer__logo"
-            style="filter: brightness(0) invert(1);"
+            class="tm-footer-logo-img"
             loading="lazy"
           />
 
@@ -112,8 +111,8 @@ const socials = [
 
 <style scoped>
 .tm-footer {
-  background: #252525;
-  border-top: 1px solid #3a3a3a;
+  background: var(--header-bg);
+  border-top: 1px solid var(--header-border);
   position: relative;
   z-index: 10;
 }
@@ -162,16 +161,16 @@ const socials = [
   width: 36px;
   height: 36px;
   border-radius: 6px;
-  border: 1px solid #484848;
-  color: #aaaaaa;
-  fill: #aaaaaa;
+  border: 1px solid var(--btn-reset-border);
+  color: var(--text-muted);
+  fill: var(--text-muted);
   transition: color 0.15s, border-color 0.15s, fill 0.15s;
 }
 
 .tm-footer__social-link:hover {
-  color: #fff;
-  fill: #fff;
-  border-color: #888;
+  color: var(--text-primary);
+  fill: var(--text-primary);
+  border-color: var(--text-primary);
 }
 
 .tm-footer__social-link svg { fill: inherit; }
@@ -187,7 +186,7 @@ const socials = [
 
 .tm-footer__contact li {
   font-size: 0.8125rem;
-  color: #aaaaaa;
+  color: var(--text-muted);
   line-height: 1.6;
 }
 
@@ -204,7 +203,7 @@ const socials = [
 .tm-footer__menu-title {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-primary);
   margin-bottom: 0.875rem;
   letter-spacing: 0.02em;
 }
@@ -220,17 +219,17 @@ const socials = [
 
 .tm-footer__menu-link {
   font-size: 0.8125rem;
-  color: #aaaaaa;
+  color: var(--text-muted);
   text-decoration: none;
   transition: color 0.15s;
   display: block;
 }
 
-.tm-footer__menu-link:hover { color: #dddddd; }
+.tm-footer__menu-link:hover { color: var(--text-secondary); }
 
 .tm-footer__divider {
   height: 1px;
-  background: #3a3a3a;
+  background: var(--header-border);
   margin: 2rem 0 1.5rem;
 }
 
@@ -255,16 +254,16 @@ const socials = [
 
 .tm-footer__term-link {
   font-size: 0.8125rem;
-  color: #aaaaaa;
+  color: var(--text-muted);
   text-decoration: none;
   transition: color 0.15s;
 }
 
-.tm-footer__term-link:hover { color: #dddddd; }
+.tm-footer__term-link:hover { color: var(--text-secondary); }
 
 .tm-footer__copyright {
   font-size: 0.75rem;
-  color: #777777;
+  color: var(--text-muted);
   letter-spacing: 0.01em;
 }
 </style>

@@ -41,7 +41,7 @@ function onLangChange(e) { setLocale(e.target.value) }
           alt="Techman Robot"
           width="53"
           loading="eager"
-          style="filter: brightness(0) invert(1);"
+          class="tm-logo-img"
         />
       </a>
 
@@ -94,8 +94,8 @@ function onLangChange(e) { setLocale(e.target.value) }
 <style scoped>
 .tm-header {
   width: 100%;
-  background: #252525;
-  border-bottom: 1px solid #3a3a3a;
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--header-border);
   flex-shrink: 0;
   position: relative;
   z-index: 50;
@@ -133,9 +133,9 @@ function onLangChange(e) { setLocale(e.target.value) }
 
 .tm-header__lang {
   background: transparent;
-  border: 1px solid #4a4a4a;
+  border: 1px solid var(--header-border);
   border-radius: 4px;
-  color: #dddddd;
+  color: var(--text-primary);
   font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
@@ -144,8 +144,8 @@ function onLangChange(e) { setLocale(e.target.value) }
   padding: 0.3rem 0.5rem;
   transition: border-color 0.15s;
 }
-.tm-header__lang:hover { border-color: #888; }
-.tm-header__lang option { background: #2A2A2A; color: #fff; }
+.tm-header__lang:hover { border-color: var(--text-muted); }
+.tm-header__lang option { background: var(--bg-color); color: var(--text-primary); }
 
 .tm-btn {
   display: inline-flex;
@@ -157,28 +157,28 @@ function onLangChange(e) { setLocale(e.target.value) }
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
-  transition: all 0.15s;
   font-family: inherit;
   cursor: pointer;
 }
 
 .tm-btn--outline {
-  border: 1px solid #666666;
-  color: #dddddd;
+  border: 1px solid var(--btn-outline-border);
+  color: var(--btn-outline-text);
   background: transparent;
 }
 .tm-btn--outline:hover {
-  border-color: #aaaaaa;
-  color: #ffffff;
+  background: var(--btn-outline-hover);
+  border-color: var(--btn-outline-hover);
+  color: var(--btn-solid-text);
 }
 
 .tm-btn--solid {
-  background: #ffffff;
-  color: #2A2A2A;
-  border: 1px solid #ffffff;
+  background: var(--btn-solid-bg);
+  color: var(--btn-solid-text);
+  border: 1px solid var(--btn-solid-bg);
 }
 .tm-btn--solid:hover {
-  background: #e8e8e8;
-  border-color: #e8e8e8;
+  background: var(--btn-solid-hover);
+  border-color: var(--btn-solid-hover);
 }
 </style>
